@@ -40,9 +40,9 @@ struct info_mensaje{
 };
 
 void buscar_token (char *);
-void extraer_info (const char * const, struct info_mensaje*);
+void extraer_info (const char *, struct info_mensaje*);
 void registrar_mensajes (struct info_mensaje);
-void arma_url_rta (struct info_mensaje, const char* token, char* url_respondedor);
+void arma_url_rta (struct info_mensaje, const char * token, char * url_respondedor);
 
 
 int main(void) {
@@ -82,7 +82,7 @@ int main(void) {
       if (res != 0)
         printf("Error Código: %d\n", res);
 
-      /*Cuando la needle no está en el haybale, strstr devuelve null*/
+      /*Cuando la needle 'update_id' no está en el haybale, strstr devuelve null*/
       if(strstr(chunk.response, "update_id") == NULL){
         if(no_ser_denso){
           printf("Todavía no hay mensajes\n");
@@ -101,13 +101,11 @@ int main(void) {
       registrar_mensajes(mensaje);
 
       /*Revisor de errores
-
       printf("\n%ld", mensaje.update_id);
       printf("\n%ld", mensaje.chat_id);
       printf("\n%s", mensaje.username);
       printf("\n%s", mensaje.text);
       printf("\n%ld", mensaje.hora);
-
       */
 
       arma_url_rta(mensaje, token, url_sendMessage);
@@ -134,18 +132,16 @@ int main(void) {
       /*Actualizo URL*/
       sprintf(url,"%s?offset=%ld", url_base, mensaje.update_id + 1);
 
-
       sleep(2);
     }
     
-
   }
 
   curl_easy_cleanup(curl);
   
   return 0;
-}
 
+}
 
 
 void buscar_token (char * token){
@@ -181,11 +177,12 @@ void buscar_token (char * token){
 }
 
 /*En string existe strstr que busca una 'aguja'(cadena de char especpifica) en un 'pajar'(cadena)*/
-void extraer_info (const char * const haystack, struct info_mensaje* msg){
+void extraer_info (const char * haystack, struct info_mensaje* msg){
 
   char *p1;
   char arr_temp[512]; /*tamano de lo mas grande que puedo tener, text*/
   int i=0,j=0;
+
 
   p1=strstr(haystack, "update_id");
   p1=strstr(p1, ":");
@@ -253,7 +250,7 @@ void extraer_info (const char * const haystack, struct info_mensaje* msg){
   msg->text[j]='\0';
 
 
-/*ojo que upDATE tambien dice date, entonces lo busco con comillas*/
+  /*ojo que upDATE tambien dice date, entonces lo busco con '/"' para que me la tome bien*/
   p1=strstr(haystack, "\"date\"");
   p1=strstr(p1, ":");
   p1++;
@@ -292,7 +289,7 @@ void arma_url_rta (struct info_mensaje msg, const char* token, char* url_sendMes
   int h=0, c=0;
   char *no_entendi[]={
     "No%20entendí%20lo%20que%20dijiste",
-    "Solo%20estoy%20programado%20para%20decir%20hola%20o%20chau",
+    "Solo%20estoy%20programado%20para%20decir%20hola%20y%20chau",
     "Mejor%20preguntale%20a%20ChatGPT...",
     "No%20tengo%20una%20respuesta%20para%20eso",
     "Escuchá%20a%20tu%20corazón"
@@ -305,10 +302,8 @@ void arma_url_rta (struct info_mensaje msg, const char* token, char* url_sendMes
       (strstr(msg.text, "Buen dia") != NULL)||
       (strstr(msg.text, "Buenos dias") != NULL)){
     
-        /*Dos veces el % para que me lo tome literal*/
         sprintf(mensaje,"%s%s", "Hola,%20", msg.username);
         h++;
- 
   };
  
   /*Veo si me dice chau*/
