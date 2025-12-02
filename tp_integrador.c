@@ -39,27 +39,15 @@ struct info_mensaje{
   long hora;
 };
 
+/*Funciones varias*/
 void buscar_token (char *);
 void extraer_info (const char *, struct info_mensaje*);
 void registrar_mensajes (struct info_mensaje);
 void arma_url_rta (struct info_mensaje, const char * token, char * url_respondedor, int);
 
 
-/*int argc, char *argv[]
-if argc !=2 
-printf intrucciones de como pasar el archivo
-return 1;
-
-for hasta la cantidad de argc imprimir cadenas apuntando a la direc de la cadena
-
-FILE *fp = fopen(arcgv[1], "r")fscanf (fo, "%s", token)
-*/
-
-/*otra cosita usar snprintf, cuyo srgundo argumento es el ltamaño maxmo para que n */
-
-
-int main(void) {
-
+int main(int argc, char *argv[]) {
+  
   char token[128];
   char url_base[256];
   char url[256];
@@ -69,7 +57,27 @@ int main(void) {
 
   srand(time(NULL));
 
-  buscar_token(token);
+  if(argc != 2){
+    printf("Debe pasar el archivo del token como agumento.\n");
+    return 1;
+  }
+
+  FILE *fp=fopen(argv[1], "r");
+
+  if (fp == NULL){
+    printf("Error, ese archivo no se encuentra o no puede abrirse.\n");
+    return 1;
+  }
+
+  if (fscanf(fp, " %127s", token) != 1){
+      printf("Error: el archivo no contiene un token válido.\n");
+      return 1;
+  };
+  
+  /*limpieza de token*/
+  token[strcspn(token, "\r\n")] = '\0';
+    
+  fclose (fp);
 
   /*armo la URL base*/
   snprintf(url_base, sizeof(url_base), "%s%s%s", "https://api.telegram.org/bot", token, "/getUpdates");
@@ -156,39 +164,6 @@ int main(void) {
   curl_easy_cleanup(curl);
   
   return 0;
-
-}
-
-
-void buscar_token (char * token){
-    
-    char archivo_token[128];
-    FILE *fp;
-    int tok_valido;
-    
-    do{
-
-        do{
-            printf("Ingrese el nombre del archivo donde se encuentra el TOKEN:\n");
-            scanf (" %127s", archivo_token);
-            
-            fp=fopen(archivo_token, "r");
-        
-            if (fp == NULL)
-                printf("Error, ese archivo no se encuentra o no puede abrirse.\n");
-        
-        } while (fp == NULL);
-        
-        if (fscanf(fp, " %127s", token) != 1){
-            printf("Error: el archivo no contiene un token válido.\n");
-            tok_valido=0;
-        } else
-            tok_valido=1;
-        
-        token[strcspn(token, "\r\n")] = '\0';
-    
-        fclose (fp);
-    }while (tok_valido==0);
 
 }
 
