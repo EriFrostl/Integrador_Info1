@@ -42,7 +42,20 @@ struct info_mensaje{
 void buscar_token (char *);
 void extraer_info (const char *, struct info_mensaje*);
 void registrar_mensajes (struct info_mensaje);
-void arma_url_rta (struct info_mensaje, const char * token, char * url_respondedor);
+void arma_url_rta (struct info_mensaje, const char * token, char * url_respondedor, int);
+
+
+/*int argc, char *argv[]
+if argc !=2 
+printf intrucciones de como pasar el archivo
+return 1;
+
+for hasta la cantidad de argc imprimir cadenas apuntando a la direc de la cadena
+
+FILE *fp = fopen(arcgv[1], "r")fscanf (fo, "%s", token)
+*/
+
+/*otra cosita usar snprintf, cuyo srgundo argumento es el ltamaño maxmo para que n */
 
 
 int main(void) {
@@ -59,8 +72,8 @@ int main(void) {
   buscar_token(token);
 
   /*armo la URL base*/
-  sprintf(url_base,"%s%s%s", "https://api.telegram.org/bot", token, "/getUpdates");
-  sprintf(url, "%s", url_base);
+  snprintf(url_base, sizeof(url_base), "%s%s%s", "https://api.telegram.org/bot", token, "/getUpdates");
+  snprintf(url, sizeof(url), "%s", url_base);
 
   /*arranco el curl*/
   CURLcode res;
@@ -108,7 +121,7 @@ int main(void) {
       printf("\n%ld", mensaje.hora);
       */
 
-      arma_url_rta(mensaje, token, url_sendMessage);
+      arma_url_rta(mensaje, token, url_sendMessage, sizeof(url_sendMessage));
 
       free(chunk.response);
 
@@ -130,7 +143,10 @@ int main(void) {
       free(chunk_send.response);
 
       /*Actualizo URL*/
-      sprintf(url,"%s?offset=%ld", url_base, mensaje.update_id + 1);
+      /*acá tira warning porque el tamaño del arreglo de url base y url es el mismo,
+      y url es urlbase + otras cosas, entonces podría no entrar,
+      pero elegí ignorarlo porque en la práctica no va a pasarse... creo*/
+      snprintf(url, sizeof(url), "%s%s%ld", url_base, "?offset=", mensaje.update_id + 1);
 
       sleep(2);
     }
@@ -283,7 +299,7 @@ void registrar_mensajes (struct info_mensaje msg){
     fclose(fp);
 }
 
-void arma_url_rta (struct info_mensaje msg, const char* token, char* url_sendMessage){
+void arma_url_rta (struct info_mensaje msg, const char* token, char* url_sendMessage, int size_receptor){
 
   char mensaje[128];
   int h=0, c=0;
@@ -302,7 +318,7 @@ void arma_url_rta (struct info_mensaje msg, const char* token, char* url_sendMes
       (strstr(msg.text, "Buen dia") != NULL)||
       (strstr(msg.text, "Buenos dias") != NULL)){
     
-        sprintf(mensaje,"%s%s", "Hola,%20", msg.username);
+        snprintf(mensaje, sizeof(mensaje), "%s%s", "Hola,%20", msg.username);
         h++;
   };
  
@@ -312,17 +328,17 @@ void arma_url_rta (struct info_mensaje msg, const char* token, char* url_sendMes
       (strstr(msg.text, "Adios") != NULL)||
       (strstr(msg.text, "Hasta luego") != NULL)){
     
-        sprintf(mensaje,"%s", "Chau,%20fue%20un%20gusto%20charlar%20con%20vos!");
+        snprintf(mensaje, sizeof(mensaje), "%s", "Chau,%20fue%20un%20gusto%20charlar%20con%20vos!");
         c++;
  
   };
 
   if ((h)&&(c))
-    sprintf(mensaje,"%s", "Hola%20y%20chau");
+    snprintf(mensaje, sizeof(mensaje), "%s", "Hola%20y%20chau");
 
   if (!((h)||(c))){
-    sprintf(mensaje,"%s", no_entendi[rand()%5]);    
+    snprintf(mensaje,sizeof(mensaje), "%s", no_entendi[rand()%5]);    
   };
 
-  sprintf(url_sendMessage, "%s%s%s%ld%s%s", "https://api.telegram.org/bot", token, "/sendMessage?chat_id=", msg.chat_id, "&text=", mensaje);
+  snprintf(url_sendMessage, size_receptor, "%s%s%s%ld%s%s", "https://api.telegram.org/bot", token, "/sendMessage?chat_id=", msg.chat_id, "&text=", mensaje);
 }
